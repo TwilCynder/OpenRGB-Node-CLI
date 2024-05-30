@@ -12,6 +12,6 @@
   "dependencies": {
     "@twilcynder/arguments-parser": "^1.10.1",
     "@twilcynder/commandline": "^1.4.0",
-    "openrgb": "^0.1.2"
+    "openrgb-sdk": "^0.5.2"
   }
 }

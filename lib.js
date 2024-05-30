@@ -1,5 +1,5 @@
 import { ArgumentsManager } from "@twilcynder/arguments-parser";
-import { OpenRGBClient } from "openrgb";
+import { Client } from "openrgb-sdk";
 
 const DEFAULT_HOST = "0.0.0.0";
 const DEFAULT_PORT = 6742;
@@ -13,14 +13,29 @@ function initParser(){
 }
 const basic_parser = initParser();
 
+
+/**
+ * Design philosophy : you cannot initalize a client without connecting
+ */
 export class ClientManager {
     constructor(){
-        super()
         this.client = null;
     }
 
+    async reconnect(){
+        if (this.client){
+            if (this.client.isConnected){
+                throw "Already connected"
+            } else {
+                this.client.connect();
+            }
+        } else {
+            throw "No config - please connect with a host and port first"
+        }
+    }
+
     async connect(host, port, name){
-        let client = new OpenRGBClient({host, port, name});
+        let client = new Client({host, port, name});
         await client.connect();
     
         this.client = client;
@@ -44,23 +59,52 @@ export class ClientManager {
         
         if (host){
             if (port){
-                return await connect(host, port, name);
+                return await this.connect(host, port, name);
             } else {
                 console.warn("Host provided without port. You must provide the host and the port, separated either by a space or colon.")
             }
         }
     }
+
+    disconnect(){
+        this.client.disconnect();
+    }
+
+    reportState(){
+        if (this.client){
+            return (this.client.isConnected ? "Connected" : "Disconnected") + ". Host : " + this.client.host + " | Port : " + this.client.port;  
+        }
+        return "Connexion is not configured."
+    }
+
+    /**
+     * Checks if there is a connected client and returns it
+     * @returns 
+     */
+    getClient(){
+        if (this.client){
+            if (this.client.isConnected){
+                return this.client
+            } else {
+                throw "Client is disconnected ; please reconnect"
+            }
+            
+        } else {
+            throw "Connexion is not configured, please connect with a host and port first"
+        }
+    }
 }
 
 /**
- * @param {OpenRGBClient} client 
+ * @param {Client} client 
+ * @returns 
  */
 export async function getAllDevices(client){
     const deviceCount = await client.getControllerCount();
 
     let res = [];
     for (let i = 0; i < deviceCount; i++){
-        res.push(await client.getDeviceController(i));
+        res.push(await client.getControllerData(i));
     }
 
     return res;
