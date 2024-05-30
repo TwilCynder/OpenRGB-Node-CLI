@@ -1,9 +1,11 @@
-import { ClientManager, getAllDevices } from "./lib.js";
 import { MissingArgumentError } from "@twilcynder/arguments-parser";
 import cl from "@twilcynder/commandline"
+import { ClientManager } from "./src/ClientManager.js";
+import { DevicesManager } from "./src/DevicesManager.js";
 
 let clientManager = new ClientManager;
-
+let devicesManager = new DevicesManager;
+ 
 try {
     await clientManager.connectWithArgs(process.argv.slice(2));
 
@@ -39,11 +41,17 @@ cl.commands = {
 
     listDevices: async () => {
         try {
-            console.log(await getAllDevices(clientManager.getClient()));
+            let devices = await devicesManager.getDevices(clientManager.getClient());
+            for (let i = 0; i < devices.length; i++){
+                console.log(i,":", devices[i].name);
+            }
+            cl.stopLogging();
         } catch (err){
             console.error("Error during command execution :", err)
         }
     }
 }
 
+cl.enableExit();
+cl.enableList();
 cl.start();
