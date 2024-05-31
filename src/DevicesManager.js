@@ -14,4 +14,16 @@ export class DevicesManager {
     async getDevices(client){
         return this.#cache || await this.load(client);
     }
+
+    async getLEDs(client, deviceID){
+        let devices = await this.getDevices(client);
+
+        if (deviceID >= devices.length){
+            throw `Device index above maximum (highest valid device index : ${devices.length - 1})`
+        }
+
+        console.log(devices[deviceID]);
+
+        return devices[deviceID].colors;
+    }
 }
