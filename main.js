@@ -2,6 +2,7 @@ import { ArgumentsManager, MissingArgumentError } from "@twilcynder/arguments-pa
 import cl from "@twilcynder/commandline"
 import { ClientManager } from "./src/ClientManager.js";
 import { getAllDevices, getDevice, stringifyLEDValue } from "./src/lib.js";
+import { parseColorString } from "./src/colorUtil.js";
 
 let clientManager = new ClientManager;
 //let devicesManager = new DevicesManager;
@@ -61,16 +62,16 @@ cl.commands = {
     },
     */
 
-    listDevices: async () => {
+    devices: async () => {
         return command(async () => {
-            let devices = getAllDevices(clientManager.getClient());
+            let devices = await getAllDevices(clientManager.getClient());
             for (let i = 0; i < devices.length; i++){
                 console.log(i,":", devices[i].name);
             }
         })
     },
 
-    listLEDs: async (args) => {
+    leds: async (args) => {
         return command(async () => {
             let {id} = new ArgumentsManager().addParameter("id", {type: "number"}, false).parseArguments(args);
             
@@ -84,12 +85,29 @@ cl.commands = {
         })
     },
 
-    setLED: async (args) => {
+
+
+    setled: async (args) => {
         return command(async () => {
-            let {id, color} = new ArgumentsManager().addParameter("id", {type: "number"}, false).addParameter("color", {}, false).enableHelpParameter(true)
-                .parseArguments(args);
+            let parameters = new ArgumentsManager()
+                .addParameter("deviceID", {type: "number"}, false)
+                .addParameter("ledID", {type: "number"}, false)
+                .addParameter("colorStr", {}, false)
+                .addOption("-n", {dest: "colorNotation"})
+                .enableHelpParameter(true)
+
+            let {deviceID, ledID, colorStr, colorNotation, help} = parameters.parseArguments(args);
             
-            console.log("yeah")
+            if (help){
+                console.log(parameters.getHelp())
+                return;
+            }
+
+            let orgbColor = parseColorString(colorStr, colorNotation);
+
+            let client = clientManager.getClient();
+
+            client.updateSingleLed(deviceID, ledID, orgbColor);
         })
     }
 }
