@@ -85,7 +85,42 @@ cl.commands = {
         })
     },
 
+    modes: async (args) => {
+        return command (async () => {
+            let {id} = new ArgumentsManager().addParameter("id", {type: "number"}, false).parseArguments(args);
 
+            let device = await getDevice(clientManager.getClient(), id);
+
+            console.log(device.modes);
+        })
+    },
+
+    setmode: async (args) => {
+        return command (async () => {
+            let parameters = new ArgumentsManager()
+                .addParameter("deviceID", {type: "number"}, false)
+                .addParameter("modeID", {}, false)
+                .enableHelpParameter(true)
+
+            let {deviceID, modeID, help} = parameters.parseArguments(args);
+            
+            if (help){
+                console.log(parameters.getHelp())
+                return;
+            }
+
+            let device = await getDevice(clientManager.getClient(), deviceID);
+            let mode = device.modes[modeID];
+
+            if (!mode){
+                throw `Selected device does not have a mode with ID ${modeID}. Use "modes ${deviceID}" to get a list of all modes for this device`
+            }
+
+            let client = clientManager.getClient();
+
+            client.updateMode(deviceID, mode.id);
+        })
+    },
 
     setled: async (args) => {
         return command(async () => {
