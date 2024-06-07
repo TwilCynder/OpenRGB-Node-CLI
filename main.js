@@ -144,6 +144,31 @@ cl.commands = {
 
             client.updateSingleLed(deviceID, ledID, orgbColor);
         })
+    },
+
+    setleds: async (args) => {
+        return command(async () => {
+            let parameters = new ArgumentsManager()
+                .addParameter("deviceID", {type: "number"}, false)
+                .addParameter("colorStr", {}, false)
+                .addOption("-n", {dest: "colorNotation"})
+                .enableHelpParameter(true)
+
+            let {deviceID, ledID, colorStr, colorNotation, help} = parameters.parseArguments(args);
+            
+            if (help){
+                console.log(parameters.getHelp())
+                return;
+            }
+
+            let client = clientManager.getClient();
+            let device = await getDevice(clientManager.getClient(), deviceID);
+
+            let orgbColor = parseColorString(colorStr, colorNotation);
+            let colors = Array(device.colors.length).fill(orgbColor);
+
+            client.updateLeds(deviceID, colors);
+        })
     }
 }
 
